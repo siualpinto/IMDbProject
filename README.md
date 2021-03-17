@@ -1,68 +1,108 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+===================================================================================
+    Predict IMDB movie rating
+    by Chuan Sun (sundeepblue at gmail dot com)
+    https://twitter.com/sundeepblue
+    Scrapy project @ NYC Data Science Academy
+    8/14/2016
+===================================================================================
 
-## Available Scripts
 
-In the project directory, you can run:
+===================================================================================
+# STEP 1: 
 
-### `npm start`
+Fetch a list of 5000 movie titles and budgets from www.the-numbers.com
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+This step will generate a JSON file 'movie_budget.json'
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+$ scrapy crawl movie_budget -o movie_budget.json
 
-### `npm test`
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+===================================================================================
+# STEP 2: 
 
-### `npm run build`
+Load 5000+ movie titles from the JSON file 'movie_budget.json'
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Then search those titles from IMDB website to get the real IMDB movie links
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+It will generate a JSON file 'fetch_imdb_url.json' containing movie-link pairs
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+$ scrapy crawl fetch_imdb_url -o fetch_imdb_url.json
 
-### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+===================================================================================
+# STEP 3: 
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Scrape 5000+ IMDB movie information
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+This step will load the JSON file 'fetch_imdb_url.json', go into each movie page, and grab data
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+This step will generate a JSON file 'imdb_output.json' (20M) containing detailed info of 5000+ movies
 
-## Learn More
+It will also download all available posters for all movies.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+A total of 4907 posters can be downloaded (998MB). Note that I am not sure if I can upload all those posters into github,
+so I only uploaded a few. You can see from my code how to use scrapy to grab them all. 
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+$ scrapy crawl imdb -o imdb_output.json
 
-### Code Splitting
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+===================================================================================
+# STEP 4: 
 
-### Analyzing the Bundle Size
+Perform face recognition to count face numbers from all posters
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+This step will save result into JSON file 'image_and_facenumber_pair_list.json'
 
-### Making a Progressive Web App
+$ python detect_faces_from_posters.py
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+===================================================================================
+# STEP 5: 
 
-### Advanced Configuration
+Load two JSON files 'imdb_output.json' and 'image_and_facenumber_pair_list.json'
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+Parse all variables into valid format.
 
-### Deployment
+Generate a final CSV table containing 28 variables that can be loaded in R or Pandas
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+The output will be a CSV file 'movie_metadata.csv' (1.5MB)
 
-### `npm run build` fails to minify
+"movie_title"   
+"color"                     
+"num_critic_for_reviews"   
+"movie_facebook_likes" 
+"duration"                  
+"director_name"  
+"director_facebook_likes"  
+"actor_3_name" 
+"actor_3_facebook_likes"    
+"actor_2_name"           
+"actor_2_facebook_likes"   
+"actor_1_name" 
+"actor_1_facebook_likes"    
+"gross"                     
+"genres"                   
+"num_voted_users"           
+"cast_total_facebook_likes" 
+"facenumber_in_poster"      
+"plot_keywords"             
+"movie_imdb_link"           
+"num_user_for_reviews"      
+"language"                 
+"country"                   
+"content_rating"            
+"budget"                    
+"title_year"                   
+"imdb_score"                
+"aspect_ratio"              
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+$ python parse_scraped_data.py
+
+
+===================================================================================
+# STEP 6:
+
+Load the 'movie_metadata.csv' file in RStudio, and perform EDA and LASSO regression
+
+$ > run the RStudio
+
+$ > load the file 'movie_rating_prediction.R'
